@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lenovo-enhanced-keyboard-mac-tools"
+version = "0.1.0"
+description = "CLI + TUI toolkit for Lenovo Enhanced Performance USB Keyboard hotkeys on macOS"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+lenovokeyb = "lenovokeyb.cli:main"

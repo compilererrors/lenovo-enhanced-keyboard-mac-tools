@@ -1,0 +1,39 @@
+USB Enhanced Performance Keyboard - Readme Instructions
+
+I. SYSTEM REQUIREMENTS
+
+Software:
+ Windows XP, Windows Vista, Windows 7, Windows 8, Windows 8.1, Windows 10.
+
+Hardware:
+A computer PC with USB ports.
+At least 800*600 display resolution.
+
+
+II. INSTALLATION INSTRUCTIONS
+
+To install the software for your Enhanced Performance Keyboard,
+please follow below steps:
+
+1. Turn your system on and start Windows.
+2. Connect your Enhanced Performance Keyboard to the USB port of your PC.
+3. If this is the first that you connect the Enhanced Performance Keyboard 
+   to your system, some "New Device Found" messages may appear on the 
+   screen. Follow the onscreen instructions to complete the installation.
+4. Run the setup program to install the software. 
+
+We also provide a command for silent installation.
+   setup program: setup.exe /s /v/qn	silent installation, no user input needed
+
+Note: For silent installation, you need to run the exe firstly, then input the path you want for the core file,then go to the path, then you can use the command based on the core file.
+
+III. UNINSTALLATION INSTRUCTIONS
+
+To remove this software, please follow below steps:
+
+1. Open the Control Panel by clicking Settings from Start Menu.
+2. Open the "Add/Remove Program" and select "USB Enhanced Performance Keyboard"
+   from the list.
+3. Click on the "Add/Remove" button and follow the instructions to
+   complete uninstallation.
+
