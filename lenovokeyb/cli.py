@@ -17,6 +17,7 @@ from .macos import (
     monitor_keyboard,
 )
 from .models import KeyMapping
+from .presets import get_preset, list_presets
 from .tui import run_tui
 
 
@@ -55,6 +56,24 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     sub.add_parser("apply", help="Apply local mappings to macOS with hidutil")
     sub.add_parser("clear", help="Clear active hidutil mappings")
     sub.add_parser("tui", help="Interactive mapping editor")
+
+    p_preset = sub.add_parser("preset", help="List/show/install preset mappings")
+    preset_sub = p_preset.add_subparsers(dest="preset_command", required=True)
+    preset_sub.add_parser("list", help="List available presets")
+
+    p_preset_show = preset_sub.add_parser("show", help="Show mappings inside a preset")
+    p_preset_show.add_argument("--name", required=True, help="Preset name")
+
+    p_preset_install = preset_sub.add_parser("install", help="Install a preset into local config")
+    p_preset_install.add_argument("--name", required=True, help="Preset name")
+    mode = p_preset_install.add_mutually_exclusive_group()
+    mode.add_argument("--replace", action="store_true", help="Replace local mappings with preset")
+    mode.add_argument("--merge", action="store_true", help="Merge preset with local mappings")
+    p_preset_install.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply mappings immediately via hidutil after saving",
+    )
 
     return parser.parse_args(argv)
 
@@ -205,6 +224,69 @@ def cmd_clear() -> int:
     return 0
 
 
+def _mapping_key(mapping: KeyMapping) -> tuple[int, int]:
+    return (mapping.src_page, mapping.src_usage)
+
+
+def cmd_preset_list() -> int:
+    for preset in list_presets():
+        print(f"- {preset.name}: {preset.description}")
+    return 0
+
+
+def cmd_preset_show(name: str) -> int:
+    try:
+        preset = get_preset(name)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    print(f"{preset.name}: {preset.description}")
+    for idx, mapping in enumerate(preset.mappings, start=1):
+        print(f"{idx:02d}. {mapping.short()}")
+    return 0
+
+
+def cmd_preset_install(
+    name: str,
+    config: Path | None,
+    replace: bool,
+    merge: bool,
+    apply_now: bool,
+) -> int:
+    try:
+        preset = get_preset(name)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    existing = load_mappings(config)
+    if replace or not merge:
+        result = list(preset.mappings)
+    else:
+        by_src = {_mapping_key(m): m for m in existing}
+        for mapping in preset.mappings:
+            by_src[_mapping_key(mapping)] = mapping
+        result = list(by_src.values())
+
+    path = save_mappings(result, config)
+    mode_text = "replaced" if (replace or not merge) else "merged"
+    print(
+        f"Preset '{preset.name}' {mode_text}: {len(result)} mapping(s) saved to {path}"
+    )
+
+    if apply_now:
+        if not is_macos():
+            print("Saved, but --apply is only available on macOS.", file=sys.stderr)
+            return 1
+        try:
+            hidutil_set_mappings(result)
+        except MacCommandError as e:
+            print(str(e), file=sys.stderr)
+            return 1
+        print("Mappings applied via hidutil.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv or sys.argv[1:])
     config = args.config
@@ -230,6 +312,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "tui":
         run_tui(config)
         return 0
+    if args.command == "preset":
+        if args.preset_command == "list":
+            return cmd_preset_list()
+        if args.preset_command == "show":
+            return cmd_preset_show(args.name)
+        if args.preset_command == "install":
+            return cmd_preset_install(
+                name=args.name,
+                config=config,
+                replace=args.replace,
+                merge=args.merge,
+                apply_now=args.apply,
+            )
+        print(f"Unknown preset command: {args.preset_command}", file=sys.stderr)
+        return 1
 
     print(f"Unknown command: {args.command}", file=sys.stderr)
     return 1

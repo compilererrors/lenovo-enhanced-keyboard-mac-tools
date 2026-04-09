@@ -50,14 +50,23 @@ lenovokeyb add \
   --label "Calculator to F1"
 ```
 
-4. Review and apply:
+4. Or install a standard preset:
+
+```bash
+lenovokeyb preset list
+lenovokeyb preset show --name lenovo-launch-fkeys
+lenovokeyb preset install --name lenovo-launch-fkeys --replace
+lenovokeyb apply
+```
+
+5. Review and apply:
 
 ```bash
 lenovokeyb list
 lenovokeyb apply
 ```
 
-5. Edit interactively:
+6. Edit interactively:
 
 ```bash
 lenovokeyb tui
@@ -91,3 +100,19 @@ lenovokeyb --config /path/to/mappings.json list
 - `hidutil` mappings are not always persistent across reboots/logouts.
 - For persistent startup behavior, run `lenovokeyb apply` at login (for example via LaunchAgent).
 - Some vendor-specific keys may not be exposed through `hidutil`. If that happens, combine this with Karabiner-Elements or Hammerspoon.
+
+## Reverse-engineering notes
+
+From extracted Lenovo binaries (`skdaemon.exe`, `skhooks.dll`, `skutil.dll`, `skhidkbd.dll`), we can see support for more hotkey functions than the obvious media keys, including:
+
+- `LaunchCalculator`, `LaunchDefaultMailProgram`, `LaunchMyDocuments`, `OpenWWWHomePage`
+- `App Back`, `App Forward`, `My Favorites`
+- `Mixer_VolumeUp`, `Mixer_VolumeDown`, `Mixer_ToggleMute`
+- `Skmedia_Play`, `Skmedia_NextTrack`, `Skmedia_PrevTrack`
+- `LockWorkStation`, `Sleep`, `Power`
+
+Seen hex/binary identifiers:
+
+- HID IDs in INF: `VID_04B3` with `PID_301B`, `PID_301C`, `PID_3020`
+- HID usage page used by launch/media keys: consumer page `0x0C`
+- Common usage IDs used by preset: `0x18A`, `0x192`, `0x194`, `0x223`, `0x22A`, `0x224`, `0x225`
